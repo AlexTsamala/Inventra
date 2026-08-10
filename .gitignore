@@ -31,3 +31,5 @@ coverage/
 
 # generated
 packages/api-client/src/generated/
+
+PLAN.md
