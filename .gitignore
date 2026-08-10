@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+
+# turborepo
+.turbo/
+
+# build outputs
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# env
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# test / coverage
+coverage/
+
+# editor / OS
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+
+# generated
+packages/api-client/src/generated/

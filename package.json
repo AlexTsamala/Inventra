@@ -1,0 +1,22 @@
+{
+  "name": "inventra",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": "22.x"
+  },
+  "packageManager": "pnpm@11.5.2",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:domain": "turbo run test:domain"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.5",
+    "turbo": "^2.10.8",
+    "typescript": "^5.9.3"
+  }
+}
