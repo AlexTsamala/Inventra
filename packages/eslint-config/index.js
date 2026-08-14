@@ -22,6 +22,22 @@ export default tseslint.config(
     },
   },
   {
+    // Config files written as CommonJS (e.g. .dependency-cruiser.cjs) use
+    // module/require directly — ESLint's flat config has no Node globals by default.
+    files: ["**/*.cjs"],
+    languageOptions: {
+      sourceType: "commonjs",
+      globals: {
+        module: "writable",
+        exports: "writable",
+        require: "readonly",
+        __dirname: "readonly",
+        __filename: "readonly",
+        process: "readonly",
+      },
+    },
+  },
+  {
     ignores: ["**/dist/**", "**/.turbo/**", "**/.next/**", "**/node_modules/**"],
   },
 );

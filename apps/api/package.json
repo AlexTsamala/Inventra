@@ -6,7 +6,7 @@
     "build": "nest build",
     "dev": "nest start --watch",
     "start": "node dist/main.js",
-    "lint": "eslint \"src/**/*.ts\"",
+    "lint": "eslint \"src/**/*.ts\" && depcruise --config .dependency-cruiser.cjs src",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run"
   },
@@ -24,6 +24,7 @@
     "@inventra/tsconfig": "workspace:*",
     "@nestjs/cli": "^11.0.24",
     "@types/node": "^22.20.1",
+    "dependency-cruiser": "^18.2.0",
     "eslint": "^9.39.5",
     "prisma": "^6.19.3",
     "typescript": "^5.9.3",
