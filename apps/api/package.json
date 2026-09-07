@@ -6,14 +6,22 @@
     "build": "nest build",
     "dev": "nest start --watch",
     "start": "node dist/main.js",
-    "lint": "eslint \"src/**/*.ts\" && depcruise --config .dependency-cruiser.cjs src",
+    "lint": "eslint \"src/**/*.ts\" \"prisma/**/*.mts\" && depcruise --config .dependency-cruiser.cjs src",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "prisma db seed",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.mts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.28",
     "@nestjs/core": "^11.1.28",
     "@nestjs/platform-fastify": "^11.1.28",
+    "@node-rs/argon2": "^2.1.0",
     "@prisma/client": "^6.19.3",
     "fastify": "^5.11.3",
     "reflect-metadata": "^0.2.2",
@@ -23,7 +31,7 @@
     "@inventra/eslint-config": "workspace:*",
     "@inventra/tsconfig": "workspace:*",
     "@nestjs/cli": "^11.0.24",
-    "@types/node": "^22.20.1",
+    "@types/node": "^24.13.3",
     "dependency-cruiser": "^18.2.0",
     "eslint": "^9.39.5",
     "prisma": "^6.19.3",

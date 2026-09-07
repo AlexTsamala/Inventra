@@ -7,9 +7,109 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Throwaway model — proves the migration pipeline works end-to-end.
-// Deleted once Phase 1 introduces the real schema (Tenant, User, ...).
-model Ping {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
+model Tenant {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users         User[]
+  refreshTokens RefreshToken[]
+
+  @@map("tenants")
+}
+
+model User {
+  id           String @id @default(uuid()) @db.Uuid
+  tenantId     String @map("tenant_id") @db.Uuid
+  name         String
+  login        String
+  passwordHash String @map("password_hash")
+  roleId       String @map("role_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  lastLoginAt  DateTime? @map("last_login_at")
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  role          Role           @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  refreshTokens RefreshToken[]
+
+  // Global, not per-tenant: the login endpoint resolves the tenant from the user row,
+  // so the same address cannot exist twice.
+  @@unique([login])
+  @@index([tenantId])
+  @@map("users")
+}
+
+/// Not tenant-owned. The five roles in BR-2 are seeded once and shared by every tenant.
+model Role {
+  id   String @id @default(uuid()) @db.Uuid
+  code String
+  name String
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users       User[]
+  permissions RolePermission[]
+
+  @@unique([code])
+  @@map("roles")
+}
+
+/// Not tenant-owned. Guards check these codes ("document:post"), never a role name.
+model Permission {
+  id          String  @id @default(uuid()) @db.Uuid
+  code        String
+  description String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  roles RolePermission[]
+
+  @@unique([code])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String @map("role_id") @db.Uuid
+  permissionId String @map("permission_id") @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+model RefreshToken {
+  id       String @id @default(uuid()) @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+  userId   String @map("user_id") @db.Uuid
+
+  /// SHA-256 of the token. The plaintext exists only in the client's cookie.
+  tokenHash String @map("token_hash")
+
+  /// All tokens descended from one login. Reuse of any member revokes the whole family.
+  familyId String @map("family_id") @db.Uuid
+
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  /// Set when this token is rotated. A token that is both presented and already
+  /// replaced is the reuse signal.
+  replacedById String? @unique @map("replaced_by_id") @db.Uuid
+
+  tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replacedBy RefreshToken? @relation("TokenRotation", fields: [replacedById], references: [id], onDelete: SetNull)
+  replaces   RefreshToken? @relation("TokenRotation")
+
+  @@unique([tokenHash])
+  @@index([familyId])
+  @@index([userId])
+  @@index([tenantId])
+  @@map("refresh_tokens")
 }

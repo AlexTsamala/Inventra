@@ -3,10 +3,8 @@
   "compilerOptions": {
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "noEmit": false
+    "noEmit": true
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "prisma/**/*.mts"],
   "exclude": ["node_modules", "dist"]
 }
