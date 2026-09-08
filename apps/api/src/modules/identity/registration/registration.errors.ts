@@ -1,7 +1,7 @@
-import { DomainError } from '../shared/domain-error';
+import { DomainError } from "../../shared/domain-error";
 
 export class LoginAlreadyTakenError extends DomainError {
-  readonly code = 'IDENTITY.LOGIN_ALREADY_TAKEN';
+  readonly code = "IDENTITY.LOGIN_ALREADY_TAKEN";
 
   constructor(readonly login: string) {
     super(`A user already exists with login "${login}".`);
@@ -14,7 +14,7 @@ export class LoginAlreadyTakenError extends DomainError {
  */
 export class OwnerRoleMissingError extends Error {
   constructor() {
-    super('The OWNER role is not seeded. Run `pnpm db:seed`.');
-    this.name = 'OwnerRoleMissingError';
+    super("The OWNER role is not seeded. Run `pnpm db:seed`.");
+    this.name = "OwnerRoleMissingError";
   }
 }

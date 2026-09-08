@@ -1,13 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 
-import { PrismaService } from "../shared/prisma/prisma.service";
-import { err, ok, type Result } from "../shared/result";
+import { PrismaService } from "../../shared/prisma/prisma.service";
+import { err, ok, type Result } from "../../shared/result";
+import { PasswordHasher } from "../passwords/password-hasher";
 import {
   LoginAlreadyTakenError,
   OwnerRoleMissingError,
-} from "./identity.errors";
-import { PasswordHasher } from "./password-hasher";
+} from "./registration.errors";
 
 const OWNER_ROLE_CODE = "OWNER";
 const UNIQUE_CONSTRAINT_VIOLATION = "P2002";
