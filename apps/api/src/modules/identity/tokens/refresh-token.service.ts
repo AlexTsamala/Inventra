@@ -8,6 +8,7 @@ const REFRESH_TOKEN_BYTES = 32;
 export const REFRESH_TOKEN_TTL_DAYS = 7;
 
 export interface IssuedRefreshToken {
+  readonly id: string;
   /** Returned to the caller once, then never recoverable from the database. */
   readonly token: string;
   readonly familyId: string;
@@ -39,7 +40,7 @@ export class RefreshTokenService {
       Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
     );
 
-    await tx.refreshToken.create({
+    const created = await tx.refreshToken.create({
       data: {
         tenantId,
         userId,
@@ -49,6 +50,22 @@ export class RefreshTokenService {
       },
     });
 
-    return { token, familyId, expiresAt };
+    return { id: created.id, token, familyId, expiresAt };
+  }
+
+  /**
+   * Kills every live token descended from one login. Called when a dead token
+   * is presented, which proves the token was copied.
+   */
+  async revokeFamily(
+    tx: Prisma.TransactionClient,
+    familyId: string,
+  ): Promise<number> {
+    const { count } = await tx.refreshToken.updateMany({
+      where: { familyId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
+    return count;
   }
 }
