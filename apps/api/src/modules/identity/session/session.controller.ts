@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Logger,
@@ -8,6 +9,8 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 
+import { Public } from "../../shared/public.decorator";
+import { TenantContext } from "../../shared/tenant-context/tenant-context";
 import { LogInDto } from "./log-in.dto";
 import { LogIn, type IssuedSession } from "./log-in.use-case";
 import { RefreshSessionDto } from "./refresh-session.dto";
@@ -21,8 +24,10 @@ export class SessionController {
   constructor(
     private readonly logIn: LogIn,
     private readonly refreshSession: RefreshSession,
+    private readonly tenantContext: TenantContext,
   ) {}
 
+  @Public()
   @Post("login")
   @HttpCode(HttpStatus.OK)
   async login(@Body() body: LogInDto): Promise<IssuedSession> {
@@ -38,6 +43,7 @@ export class SessionController {
     return result.value;
   }
 
+  @Public()
   @Post("refresh")
   @HttpCode(HttpStatus.OK)
   async refresh(@Body() body: RefreshSessionDto): Promise<IssuedSession> {
@@ -58,5 +64,18 @@ export class SessionController {
     }
 
     return result.value;
+  }
+
+  /**
+   * Protected by the global guard. Every value here comes from TenantContext,
+   * which the guard filled from the token — nothing was read off the request.
+   */
+  @Get("me")
+  me(): { userId: string; tenantId: string; role: string } {
+    return {
+      userId: this.tenantContext.userId,
+      tenantId: this.tenantContext.tenantId,
+      role: this.tenantContext.role,
+    };
   }
 }

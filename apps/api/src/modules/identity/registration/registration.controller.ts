@@ -7,6 +7,7 @@ import {
   Post,
 } from "@nestjs/common";
 
+import { Public } from "../../shared/public.decorator";
 import { RegisterTenantDto } from "./register-tenant.dto";
 import { RegisterTenant } from "./register-tenant.use-case";
 
@@ -20,6 +21,7 @@ export class RegistrationController {
 
   constructor(private readonly registerTenant: RegisterTenant) {}
 
+  @Public()
   @Post("register")
   @HttpCode(HttpStatus.ACCEPTED)
   async register(
