@@ -1,13 +1,12 @@
-import { Module } from '@nestjs/common';
+import { Module } from "@nestjs/common";
 
-import { PrismaService } from './prisma.service';
+import { TenantContextModule } from "../tenant-context/tenant-context.module";
+import { PrismaService } from "./prisma.service";
+import { ScopedPrisma } from "./scoped-prisma";
 
-/**
- * Deliberately not @Global: a module that touches the database should say so in
- * its own imports.
- */
 @Module({
-  providers: [PrismaService],
-  exports: [PrismaService],
+  imports: [TenantContextModule],
+  providers: [PrismaService, ScopedPrisma],
+  exports: [PrismaService, ScopedPrisma],
 })
 export class PrismaModule {}

@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 
-import { PrismaService } from "../../shared/prisma/prisma.service";
+import { ScopedPrisma } from "../../shared/prisma/scoped-prisma";
 import { err, ok, type Result } from "../../shared/result";
 import { PasswordHasher } from "../passwords/password-hasher";
 import {
@@ -34,7 +34,7 @@ export interface IssuedSession {
 @Injectable()
 export class LogIn {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly scoped: ScopedPrisma,
     private readonly passwordHasher: PasswordHasher,
     private readonly refreshTokens: RefreshTokenService,
     private readonly jwt: JwtService,
@@ -43,10 +43,14 @@ export class LogIn {
   async execute(
     command: LogInCommand,
   ): Promise<Result<IssuedSession, InvalidCredentialsError>> {
-    const user = await this.prisma.user.findUnique({
-      where: { login: command.login },
-      include: { role: true },
-    });
+    // Bypass: logins are unique across the whole system, so finding which
+    // tenant this person belongs to is the question being asked.
+    const user = await this.scoped.bypassTenantIsolation((tx) =>
+      tx.user.findUnique({
+        where: { login: command.login },
+        include: { role: true },
+      }),
+    );
 
     if (user === null) {
       await this.passwordHasher.verify(ABSENT_USER_HASH, command.password);
@@ -62,7 +66,7 @@ export class LogIn {
       return err(new InvalidCredentialsError());
     }
 
-    const refreshToken = await this.prisma.$transaction(async (tx) => {
+    const refreshToken = await this.scoped.bypassTenantIsolation(async (tx) => {
       const issued = await this.refreshTokens.issue(tx, user.id, user.tenantId);
 
       await tx.user.update({

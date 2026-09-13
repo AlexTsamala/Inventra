@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 
-import { PrismaService } from "../../shared/prisma/prisma.service";
+import { ScopedPrisma } from "../../shared/prisma/scoped-prisma";
 import { err, ok, type Result } from "../../shared/result";
 import {
   ACCESS_TOKEN_TTL_SECONDS,
@@ -23,7 +23,7 @@ export interface RefreshSessionCommand {
 @Injectable()
 export class RefreshSession {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly scoped: ScopedPrisma,
     private readonly refreshTokens: RefreshTokenService,
     private readonly jwt: JwtService,
   ) {}
@@ -33,10 +33,14 @@ export class RefreshSession {
   ): Promise<Result<IssuedSession, RefreshFailure>> {
     const tokenHash = this.refreshTokens.hashToken(command.refreshToken);
 
-    const presented = await this.prisma.refreshToken.findUnique({
-      where: { tokenHash },
-      include: { user: { include: { role: true } } },
-    });
+    // Bypass: a refresh token is looked up by its hash alone, before we know
+    // which tenant it belongs to.
+    const presented = await this.scoped.bypassTenantIsolation((tx) =>
+      tx.refreshToken.findUnique({
+        where: { tokenHash },
+        include: { user: { include: { role: true } } },
+      }),
+    );
 
     if (presented === null) {
       return err(new InvalidRefreshTokenError());
@@ -45,7 +49,7 @@ export class RefreshSession {
     // Already rotated or already revoked. A real client never sends a token it
     // has traded in, so this one was copied.
     if (presented.revokedAt !== null || presented.replacedById !== null) {
-      await this.prisma.$transaction((tx) =>
+      await this.scoped.bypassTenantIsolation((tx) =>
         this.refreshTokens.revokeFamily(tx, presented.familyId),
       );
 
@@ -56,7 +60,7 @@ export class RefreshSession {
       return err(new InvalidRefreshTokenError());
     }
 
-    const issued = await this.prisma.$transaction(async (tx) => {
+    const issued = await this.scoped.bypassTenantIsolation(async (tx) => {
       // Claim the rotation with a conditional update. Two requests arriving at
       // once both read the row as live; only the one whose UPDATE matches
       // `revokedAt: null` gets count 1, so only one rotation can happen.
@@ -85,7 +89,7 @@ export class RefreshSession {
     });
 
     if (issued === null) {
-      await this.prisma.$transaction((tx) =>
+      await this.scoped.bypassTenantIsolation((tx) =>
         this.refreshTokens.revokeFamily(tx, presented.familyId),
       );
 

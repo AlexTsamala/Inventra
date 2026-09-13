@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 
 import { PrismaService } from "../../shared/prisma/prisma.service";
+import { ScopedPrisma } from "../../shared/prisma/scoped-prisma";
 import { err, ok, type Result } from "../../shared/result";
 import { PasswordHasher } from "../passwords/password-hasher";
 import {
@@ -28,6 +29,7 @@ export interface RegisteredTenant {
 export class RegisterTenant {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly scoped: ScopedPrisma,
     private readonly passwordHasher: PasswordHasher,
   ) {}
 
@@ -45,7 +47,9 @@ export class RegisterTenant {
     }
 
     try {
-      const registered = await this.prisma.$transaction(async (tx) => {
+      // Bypass: the tenant does not exist yet, so there is no tenant to scope
+      // to. This is the one place a tenant row is created.
+      const registered = await this.scoped.bypassTenantIsolation(async (tx) => {
         const tenant = await tx.tenant.create({
           data: { name: command.tenantName },
         });
