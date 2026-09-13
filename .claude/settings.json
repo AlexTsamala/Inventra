@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(gh run *)",
+      "Bash(pnpm db:seed)",
+      "Bash(grep -rn \"Node 22\\\\|node.*\\\\\"22\\\\|^22$\" --include=\"*.md\" --include=\"*.json\" --include=\"*.yml\" .)"
     ]
   }
 }

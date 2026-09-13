@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "engines": {
-    "node": "22.x"
+    "node": "24.x"
   },
   "packageManager": "pnpm@11.5.2",
   "scripts": {
@@ -12,7 +12,11 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "test:domain": "turbo run test:domain"
+    "test:domain": "turbo run test:domain",
+    "db:migrate": "pnpm --filter @inventra/api db:migrate",
+    "db:seed": "pnpm --filter @inventra/api db:seed",
+    "db:generate": "pnpm --filter @inventra/api db:generate",
+    "db:studio": "pnpm --filter @inventra/api db:studio"
   },
   "devDependencies": {
     "eslint": "^9.39.5",

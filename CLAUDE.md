@@ -19,6 +19,10 @@ to later phases — building toward a phase before reaching it defeats the point
 This is a **learning project**. The developer is building it to understand these patterns, not to
 ship fast. Optimise for their comprehension, not for lines of code.
 
+- **Explain in plain English.** The developer is not a native speaker. Use short sentences, common
+  words, and small concrete examples. Prefer a table or a three-line code sample over a long
+  paragraph. No idioms, no metaphors, no showing off. If a term is unavoidable (aggregate, RLS,
+  advisory lock), define it once in one sentence before using it.
 - **Explain before generating.** For any non-trivial task, describe the pattern and the trade-off
   first, then write code. If the explanation would be long, ask whether to proceed.
 - **Small steps.** One use case, one aggregate method, one endpoint per turn. Never scaffold an
@@ -163,6 +167,8 @@ pnpm lint             # eslint + dependency-cruiser boundaries
 pnpm typecheck
 pnpm db:migrate       # prisma migrate dev
 pnpm db:seed
+pnpm db:generate      # regenerate PrismaClient without touching the database
+pnpm db:studio        # browse rows at localhost:5555 — bypasses TenantContext
 pnpm api:spec         # regenerate OpenAPI spec + packages/api-client
 docker compose up -d  # postgres, redis, rabbitmq, minio, mailpit
 ```
@@ -171,7 +177,15 @@ Before saying a task is done: `pnpm lint && pnpm typecheck && pnpm test`.
 
 ## Current state
 
-**Phase:** 0 — Foundations
-**Next task:** `docker-compose.yml` with Postgres
+**Phase:** 1 — Identity and tenancy (Phase 0 complete)
+**Next task:** Permission guard — `@RequirePermission('document:post')`
+(done: schema + migration, role/permission seed, argon2id hasher, registration
++ `POST /auth/register`, login + `POST /auth/login` issuing a 15-min HS256
+access token and a 7-day refresh token, `POST /auth/refresh` with rotation and
+family revocation on reuse, global `JwtAuthGuard` + `TenantContext` via
+nestjs-cls with `@Public()` opting routes out, RLS on `tenants`/`users`/
+`refresh_tokens` with the app connecting as the non-superuser `inventra_app`
+role via `APP_DATABASE_URL`; no automated tests for any of it yet — the
+Testcontainers debt now covers registration, login, refresh and RLS)
 
 Update these two lines at the end of every session.
